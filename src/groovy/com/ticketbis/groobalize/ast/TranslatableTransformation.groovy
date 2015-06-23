@@ -11,6 +11,10 @@ import org.codehaus.groovy.ast.Parameter
 
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.stmt.*
+
+import org.hibernate.Criteria
+import org.hibernate.criterion.CriteriaSpecification
 
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class TranslatableTransformation implements ASTTransformation {
@@ -33,8 +37,28 @@ public class TranslatableTransformation implements ASTTransformation {
         ClassExpression translateWithClass = annotation.members['with']
 
         addHasManyTranslations(translatableClassNode, translateWithClass)
-
+        addNamedQueries(translatableClassNode)
         addProxyGetters(translatableClassNode, translateWithClass)
+
+    }
+
+    private void addNamedQueries(ClassNode classNode) {
+        FieldNode namedQueriesField = classNode.getField('namedQueries')
+        ClosureExpression namedQueriesClosure = namedQueriesField.initialExpression
+        BlockStatement block = namedQueriesClosure.code
+
+        Statement code = new AstBuilder().buildFromCode {
+            includeTranslations { translations = null ->
+                resultTransformer(org.hibernate.Criteria.DISTINCT_ROOT_ENTITY)
+                createAlias('translations', 't', org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN)
+
+                if (translations) {
+                    'in'('t.locale', translations)
+                }
+            }
+        }.pop()
+
+        block.addStatement(code)
     }
 
     private void addHasManyTranslations(ClassNode classNode, ClassExpression translationClass) {
