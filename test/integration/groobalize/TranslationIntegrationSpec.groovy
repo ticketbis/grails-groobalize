@@ -5,7 +5,7 @@ import com.ticketbis.groobalize.test.*
 
 import grails.test.mixin.Mock
 
-@Mock(Book)
+@Mock([Book, BookTranslation])
 class TranslationIntegrationSpec extends IntegrationSpec {
 
     Book book
@@ -34,5 +34,6 @@ class TranslationIntegrationSpec extends IntegrationSpec {
     then:
         book.save(flush: true)
         book.translations.size() == 6
+        book.title != null
     }
 }
