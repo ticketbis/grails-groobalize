@@ -5,7 +5,8 @@ class GroobalizeGrailsPlugin {
     def grailsVersion = "2.4 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-        "grails-app/views/error.gsp"
+        "grails-app/views/error.gsp",
+        "grails-app/domain/**"
     ]
 
     // TODO Fill in these fields
