@@ -45,3 +45,26 @@ class BookTranslation extends Translation<Book> {
     String title
 }
 ```
+
+```groovy
+def book = new Book(author: "Endika", releaseDate: new Date())
+
+book.addToTranslations(title: "english title", locale: new Locale('en'))
+book.addToTranslations(title: "american english title", locale: new Locale('en', 'US'))
+book.addToTranslations(title: "british english title", locale: new Locale('en', 'GB'))
+
+book.title // => american english title
+
+import org.springframework.context.i18n.LocaleContextHolder as LCH
+LCH.locale = new Locale('en', 'AU')
+
+book.title // => english title
+```
+
+Eagerly fetch translations:
+
+```groovy
+def books = Book.includeTranslations([new Locale('en', 'US'), new Locale('en')]).list()
+
+books*.translations*.locale // => [[en, en_US], [en, en_US], [en, en_US], [en, en_US], [en_US, en]]
+```
