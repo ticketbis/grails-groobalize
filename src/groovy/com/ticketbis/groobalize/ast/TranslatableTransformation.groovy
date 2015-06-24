@@ -5,16 +5,15 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.grails.commons.GrailsClassUtils
+import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
+import org.codehaus.groovy.grails.compiler.injection.GrailsASTUtils
 import org.codehaus.groovy.ast.builder.AstBuilder
-import org.codehaus.groovy.ast.ClassHelper
-import org.codehaus.groovy.ast.Parameter
 
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
 
-import org.hibernate.Criteria
-import org.hibernate.criterion.CriteriaSpecification
+import com.ticketbis.groobalize.Translation
 
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class TranslatableTransformation implements ASTTransformation {
@@ -34,7 +33,16 @@ public class TranslatableTransformation implements ASTTransformation {
         assert annotation.members['with'] instanceof ClassExpression,
                 "Invalid translation class specified."
 
-        ClassExpression translateWithClass = annotation.members['with']
+        ClassExpression translateWithExpr = annotation.members['with']
+        ClassNode translateWithClass = translateWithExpr.type
+
+        assert GrailsASTUtils.isDomainClass(translatableClassNode, sourceUnit),
+                "@Translatable annotation should be applied over domain class"
+
+        assert GrailsASTUtils.isDomainClass(translateWithClass, sourceUnit),
+                "Translation class should be a domain class"
+
+        println "Adding Translatable transform to ${ translatableClassNode.name }"
 
         addHasManyTranslations(translatableClassNode, translateWithClass)
         addNamedQueries(translatableClassNode)
@@ -43,12 +51,12 @@ public class TranslatableTransformation implements ASTTransformation {
     }
 
     private void addNamedQueries(ClassNode classNode) {
-        FieldNode namedQueriesField = classNode.getField('namedQueries')
+        FieldNode namedQueriesField = classNode.getField(GrailsDomainClassProperty.NAMED_QUERIES)
         ClosureExpression namedQueriesClosure = namedQueriesField.initialExpression
         BlockStatement block = namedQueriesClosure.code
 
         Statement code = new AstBuilder().buildFromCode {
-            includeTranslations { translations = null ->
+            includeTranslations { Collection<Locale> translations = null ->
                 resultTransformer(org.hibernate.Criteria.DISTINCT_ROOT_ENTITY)
                 createAlias('translations', 't', org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN)
 
@@ -61,17 +69,17 @@ public class TranslatableTransformation implements ASTTransformation {
         block.addStatement(code)
     }
 
-    private void addHasManyTranslations(ClassNode classNode, ClassExpression translationClass) {
-        def hasManyField = classNode.getField('hasMany')
+    private void addHasManyTranslations(ClassNode classNode, ClassNode translationClass) {
+        def hasManyField = classNode.getField(GrailsDomainClassProperty.HAS_MANY)
         def hasManyMap = hasManyField.initialExpression
 
         hasManyMap.addMapEntryExpression(
                 new ConstantExpression('translations'),
-                translationClass);
+                new ClassExpression(translationClass));
     }
 
-    private void addProxyGetters(ClassNode classNode, ClassExpression translationClass) {
-        def translatableFields = getTranslatableFields(translationClass.type)
+    private void addProxyGetters(ClassNode classNode, ClassNode translationClass) {
+        def translatableFields = getTranslatableFields(translationClass)
         translatableFields.each { field ->
             String fieldName = field.name
             String getterName = GrailsClassUtils.getGetterName(fieldName)
@@ -90,7 +98,6 @@ public class TranslatableTransformation implements ASTTransformation {
             classNode.addMethod(methodNode)
             makeFieldTransient(classNode, fieldName)
         }
-
     }
 
     private void makeFieldTransient(ClassNode classNode, String name) {
