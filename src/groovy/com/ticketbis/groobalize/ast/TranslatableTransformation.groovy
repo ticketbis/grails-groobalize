@@ -77,7 +77,8 @@ class TranslatableTransformation implements ASTTransformation {
             String fieldName = field.name
             String getterName = GrailsClassUtils.getGetterName(fieldName)
             def getterCode = new AstBuilder().buildFromString("""
-                translations.first()?.$fieldName
+                com.ticketbis.groobalize.GroobalizeHelper.
+                    getPreferredTranslation(translations)?."$fieldName"
             """).last()
 
             def methodNode = new MethodNode(
