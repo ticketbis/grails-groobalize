@@ -16,7 +16,7 @@ import org.codehaus.groovy.ast.stmt.*
 import com.ticketbis.groobalize.Translation
 
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-public class TranslatableTransformation implements ASTTransformation {
+class TranslatableTransformation implements ASTTransformation {
 
     private final static NON_TRANSLATABLE_FIELDS = [
         'id', 'version', 'errors', 'lastUpdated', 'dateCreated'
@@ -51,10 +51,6 @@ public class TranslatableTransformation implements ASTTransformation {
     }
 
     private void addNamedQueries(ClassNode classNode) {
-        FieldNode namedQueriesField = classNode.getField(GrailsDomainClassProperty.NAMED_QUERIES)
-        ClosureExpression namedQueriesClosure = namedQueriesField.initialExpression
-        BlockStatement block = namedQueriesClosure.code
-
         Statement code = new AstBuilder().buildFromCode {
             includeTranslations { Collection<Locale> translations = null ->
                 resultTransformer(org.hibernate.Criteria.DISTINCT_ROOT_ENTITY)
@@ -68,17 +64,11 @@ public class TranslatableTransformation implements ASTTransformation {
                 }
             }
         }.pop()
-
-        block.addStatement(code)
+        GroobalizeASTUtils.addNamedQuery(classNode, code)
     }
 
     private void addHasManyTranslations(ClassNode classNode, ClassNode translationClass) {
-        def hasManyField = classNode.getField(GrailsDomainClassProperty.HAS_MANY)
-        def hasManyMap = hasManyField.initialExpression
-
-        hasManyMap.addMapEntryExpression(
-                new ConstantExpression('translations'),
-                new ClassExpression(translationClass));
+        GroobalizeASTUtils.addHasManyRelationship(classNode, 'translations', translationClass)
     }
 
     private void addProxyGetters(ClassNode classNode, ClassNode translationClass) {
@@ -99,33 +89,8 @@ public class TranslatableTransformation implements ASTTransformation {
                     getterCode)
 
             classNode.addMethod(methodNode)
-            makeFieldTransient(classNode, fieldName)
+            GroobalizeASTUtils.addTransient(classNode, fieldName)
         }
-    }
-
-    private void makeFieldTransient(ClassNode classNode, String name) {
-        def transients = getOrCreateTransientsField(classNode).initialExpression
-        transients.addExpression(new ConstantExpression(name))
-    }
-
-    private FieldNode getOrCreateTransientsField(ClassNode classNode) {
-        getOrCreateField(classNode, 'transients', new ListExpression())
-    }
-
-    private FieldNode getOrCreateField(ClassNode classNode, String name, Expression initialExpression) {
-        if (!classNode.getDeclaredField(name)) {
-            def field = new FieldNode(
-                    name,
-                    FieldNode.ACC_PUBLIC | FieldNode.ACC_STATIC,
-                    new ClassNode(Object),
-                    classNode,
-                    initialExpression)
-
-            field.setDeclaringClass(classNode)
-            classNode.addField(field)
-            return field
-        }
-        classNode.getDeclaredField(name)
     }
 
     private List<FieldNode> getTranslatableFields(ClassNode translationClass) {
