@@ -61,7 +61,10 @@ public class TranslatableTransformation implements ASTTransformation {
                 createAlias('translations', 't', org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN)
 
                 if (translations) {
-                    'in'('t.locale', translations)
+                    or {
+                        isEmpty('translations')
+                        'in'('t.locale', translations)
+                    }
                 }
             }
         }.pop()
