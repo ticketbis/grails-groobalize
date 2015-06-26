@@ -47,7 +47,6 @@ class TranslatableTransformation implements ASTTransformation {
         addHasManyTranslations(translatableClassNode, translateWithClass)
         addNamedQueries(translatableClassNode)
         addProxyGetters(translatableClassNode, translateWithClass)
-
     }
 
     private void addHasManyTranslations(ClassNode classNode, ClassNode translationClass) {
@@ -56,23 +55,10 @@ class TranslatableTransformation implements ASTTransformation {
 
     private void addNamedQueries(ClassNode classNode) {
         Statement code = new AstBuilder().buildFromCode {
-            fetchTranslations {
-                resultTransformer(org.hibernate.Criteria.DISTINCT_ROOT_ENTITY)
-                createAlias('translations', 't', org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN)
+            includeTranslations { Collection<Locale> locales = null ->
+                withTranslations(locales)
             }
-            includeTranslations { Collection<Locale> translations = null ->
-                fetchTranslations()
-                if (translations) {
-                    or {
-                        isEmpty('translations')
-                        'in'('t.locale', translations)
-                    }
-                }
-            }
-            translated {
-                includeTranslations(
-                        com.ticketbis.groobalize.GroobalizeHelper.retrivePreferredLocales())
-            }
+            translated { withDefaultTranslations() }
         }.pop()
         GroobalizeASTUtils.addNamedQuery(classNode, code)
     }

@@ -1,3 +1,6 @@
+import grails.orm.HibernateCriteriaBuilder
+import com.ticketbis.groobalize.HibernateCriteriaBuilderExtension
+
 class GroobalizeGrailsPlugin {
     // the plugin version
     def version = "0.1"
@@ -46,7 +49,7 @@ Internacionalization plugin for grails inspired by Gloobalize
     }
 
     def doWithDynamicMethods = { ctx ->
-        // TODO Implement registering dynamic methods to classes (optional)
+        HibernateCriteriaBuilder.mixin(HibernateCriteriaBuilderExtension)
     }
 
     def doWithApplicationContext = { ctx ->
