@@ -25,15 +25,13 @@ class Book {
     Date releaseDate
     Book inspiredBy
 
-    static constraints = {
-    }
-
     static hasMany = [
         related: Book
     ]
 
-    static mapping = {
-    }
+    static mapping = { }
+    static constraints = { }
+    static namedQueries = { }
 }
 ```
 
@@ -61,10 +59,30 @@ LCH.locale = new Locale('en', 'AU')
 book.title // => english title
 ```
 
-Eagerly fetch translations:
+### Eagerly fetch translations
 
 ```groovy
 def books = Book.includeTranslations([new Locale('en', 'US'), new Locale('en')]).list()
 
 books*.translations*.locale // => [[en, en_US], [en, en_US], [en, en_US], [en, en_US], [en_US, en]]
 ```
+
+This will fetch books with given translations in 1 query.
+
+It's also supported on Criterias:
+
+```groovy
+books = Book.createCriteria().list {
+    // Fetch all translations
+    fetchTranslations()
+    // Fetch current locale for inspiredBy
+    withDefaultTranslations('inspiredBy')
+    // Fetch english translations for related
+    withTranslations('related', [new Locale('en')])
+}
+// No more queries from here 🎉
+books.each {
+    println([it.title, it.translations*.locale, it.inspiredBy?.translations*.title].join("\t"))
+}
+```
+
