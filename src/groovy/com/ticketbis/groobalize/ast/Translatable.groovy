@@ -6,7 +6,7 @@ import java.lang.annotation.Target
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Retention
 
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Target([ElementType.TYPE])
 @GroovyASTTransformationClass(["com.ticketbis.groobalize.ast.TranslatableTransformation"])
 @interface Translatable {
