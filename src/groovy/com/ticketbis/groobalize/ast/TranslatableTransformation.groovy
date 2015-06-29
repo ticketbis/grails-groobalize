@@ -1,5 +1,6 @@
 package com.ticketbis.groobalize.ast
 
+import groovy.util.logging.Log4j
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.codehaus.groovy.control.CompilePhase
@@ -15,11 +16,12 @@ import org.codehaus.groovy.ast.stmt.*
 
 import com.ticketbis.groobalize.Translation
 
+@Log4j
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class TranslatableTransformation implements ASTTransformation {
 
     private final static NON_TRANSLATABLE_FIELDS = [
-        'id', 'version', 'errors', 'lastUpdated', 'dateCreated'
+        'id', 'version', 'errors', 'metaClass', 'lastUpdated', 'dateCreated'
     ]
 
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
@@ -42,7 +44,7 @@ class TranslatableTransformation implements ASTTransformation {
         assert GrailsASTUtils.isDomainClass(translateWithClass, sourceUnit),
                 "Translation class should be a domain class"
 
-        println "Adding Translatable transform to ${ translatableClassNode.name }"
+        log.info "Adding Translatable transform to ${ translatableClassNode.name }..."
 
         addHasManyTranslations(translatableClassNode, translateWithClass)
         addNamedQueries(translatableClassNode)

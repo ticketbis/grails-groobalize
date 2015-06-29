@@ -21,7 +21,7 @@ class GroobalizeHelper {
         if (context instanceof WithFallbackLocaleContext) {
             return ((WithFallbackLocaleContext) context).preferredLocales
         }
-        getLocaleTree(context.locale)
+        getLocaleTree(context?.locale)
     }
 
     static List<Locale> getLocaleTree(Locale locale) {

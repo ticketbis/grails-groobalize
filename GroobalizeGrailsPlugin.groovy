@@ -2,8 +2,8 @@ import grails.orm.HibernateCriteriaBuilder
 import com.ticketbis.groobalize.HibernateCriteriaBuilderExtension
 
 class GroobalizeGrailsPlugin {
+    def version = "0.1.2"
     // the plugin version
-    def version = "0.1.1"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.4 > *"
     // resources that are excluded from plugin packaging
