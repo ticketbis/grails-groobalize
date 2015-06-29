@@ -64,7 +64,7 @@ book.title // => english title
 ```groovy
 def books = Book.includeTranslations([new Locale('en', 'US'), new Locale('en')]).list()
 
-books*.translations*.locale // => [[en, en_US], [en, en_US], [en, en_US], [en, en_US], [en_US, en]]
+books*.translations*.locale // => [[en, en_US], [en, en_US], [en_US, en]]
 ```
 
 This will fetch books with given translations in 1 query.
@@ -86,3 +86,23 @@ books.each {
 }
 ```
 
+### Customizing behaviour of translatable fields
+
+```groovy
+import com.ticketbis.groobalize.Translation
+import com.ticketbis.groobalize.ast.Field
+
+class BookTranslation extends Translation<Book> {
+    String title
+
+    @Field(inherit=false)
+    String synopsis
+}
+```
+
+Supported options are:
+
+* `inherit`: when this option is set to false, proxy getter only look
+  for translations that match exactly with first option of LocaleContext
+* `skipGetter`: when this option is set to true, the proxy getter is not
+  added to domain class
