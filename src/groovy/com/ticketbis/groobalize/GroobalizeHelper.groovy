@@ -8,9 +8,15 @@ import org.springframework.context.i18n.LocaleContext
 class GroobalizeHelper {
     static Translation getPreferredTranslation(
             Collection<Translation> translations,
+            boolean inherit = true,
             LocaleContext context = LCH.getLocaleContext()) {
 
-        List<Locale> preferredLocales = retrivePreferredLocales(context)
+        List<Locale> preferredLocales = inherit ?
+                retrivePreferredLocales(context) :
+                (List<Locale>) [context?.locale].findAll()
+
+        if (!preferredLocales)
+            return null
 
         preferredLocales.findResult { locale ->
             translations.find { it.locale == locale }

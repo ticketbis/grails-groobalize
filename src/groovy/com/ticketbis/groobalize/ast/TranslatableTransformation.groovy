@@ -66,13 +66,29 @@ class TranslatableTransformation implements ASTTransformation {
     }
 
     private void addProxyGetters(ClassNode classNode, ClassNode translationClass) {
-        def translatableFields = getTranslatableFields(translationClass)
-        translatableFields.each { field ->
+        List<FieldNode> translatableFields = getTranslatableFields(translationClass)
+        translatableFields.each { FieldNode field ->
+            List<AnnotationNode> fieldAnnotations =
+                field.getAnnotations(new ClassNode(Field))
+
+            boolean inherit = true
+            boolean skipGetter = false
+
+            if (fieldAnnotations) {
+                AnnotationNode annotation = fieldAnnotations.first()
+                if (annotation.members['inherit'])
+                    inherit = annotation.members['inherit'].isTrueExpression()
+                if (annotation.members['skipGetter'])
+                    skipGetter = annotation.members['skipGetter'].isTrueExpression()
+            }
+            if (skipGetter)
+                return
+
             String fieldName = field.name
             String getterName = GrailsClassUtils.getGetterName(fieldName)
             def getterCode = new AstBuilder().buildFromString("""
                 com.ticketbis.groobalize.GroobalizeHelper.
-                    getPreferredTranslation(translations)?."$fieldName"
+                    getPreferredTranslation(translations, $inherit)?."$fieldName"
             """).last()
 
             def methodNode = new MethodNode(
