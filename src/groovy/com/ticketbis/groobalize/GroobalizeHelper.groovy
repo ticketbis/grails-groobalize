@@ -11,6 +11,9 @@ class GroobalizeHelper {
             boolean inherit = true,
             LocaleContext context = LCH.getLocaleContext()) {
 
+        if (!translations)
+            return null
+
         List<Locale> preferredLocales = inherit ?
                 retrivePreferredLocales(context) :
                 (List<Locale>) [context?.locale].findAll()
