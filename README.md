@@ -7,7 +7,7 @@ Internacionalization plugin for grails inspired by [Gloobalize](https://github.c
 Add dependency to your BuildConfig;
 
 ```groovy
-compile "com.ticketbis.groobalize:groobalize:0.0.1"
+compile "com.ticketbis:groobalize:0.1.11"
 ```
 
 ## Usage
@@ -59,7 +59,21 @@ LCH.locale = new Locale('en', 'AU')
 book.title // => english title
 ```
 
-### Eagerly fetch translations
+#### Customizing fallbacks
+
+Groobalize also includes a `WithFallbackLocaleContext` that
+supports custom fallback.
+
+```groovy
+import com.ticketbis.groobalize.WithFallbackLocaleContext
+
+LCH.localeContext = new WithFallbackLocaleContext([new Locale('en', 'AU'),
+        new Locale('en', 'GB'), new Locale('en')])
+
+book.title // => british english title
+```
+
+#### Eagerly fetch translations
 
 ```groovy
 def books = Book.includeTranslations([new Locale('en', 'US'), new Locale('en')]).list()
@@ -72,6 +86,12 @@ This will fetch books with given translations in 1 query.
 It's also supported on Criterias:
 
 ```groovy
+// Fetch book with current translation
+def books = Book.translated().list()
+
+// Fetch book with all translation
+def books = Book.includeTranslation().list()
+
 books = Book.createCriteria().list {
     // Fetch all translations
     fetchTranslations()
@@ -86,7 +106,7 @@ books.each {
 }
 ```
 
-### Customizing behaviour of translatable fields
+#### Customizing behaviour of translatable fields
 
 ```groovy
 import com.ticketbis.groobalize.Translation
