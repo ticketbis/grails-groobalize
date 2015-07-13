@@ -2,7 +2,7 @@ import grails.orm.HibernateCriteriaBuilder
 import com.ticketbis.groobalize.HibernateCriteriaBuilderExtension
 
 class GroobalizeGrailsPlugin {
-    def version = "0.1.11"
+    def version = "0.1.12"
     // the plugin version
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.4 > *"
@@ -26,7 +26,7 @@ Internacionalization plugin for grails inspired by Gloobalize
     // Extra (optional) plugin metadata
 
     // License: one of 'APACHE', 'GPL2', 'GPL3'
-//    def license = "APACHE"
+    def license = "APACHE"
 
     // Details of company behind the plugin (if there is one)
     def organization = [ name: "Ticketbis", url: "http://engineering.ticketbis.com/" ]
