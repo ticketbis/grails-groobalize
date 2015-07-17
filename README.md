@@ -1,5 +1,8 @@
 # Groobalize
 
+[![Build
+Status](https://travis-ci.org/ticketbis/grails-groobalize.png?branch=master)](https://travis-ci.org/ticketbis/grails-groobalize)
+
 Internacionalization plugin for grails inspired by [Gloobalize](https://github.com/globalize/globalize)
 
 ## Installation
