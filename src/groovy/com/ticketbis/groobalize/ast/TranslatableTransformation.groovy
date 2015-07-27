@@ -88,10 +88,10 @@ class TranslatableTransformation implements ASTTransformation {
             String getterName = GrailsClassUtils.getGetterName(fieldName)
 
             // Added getter without parameters
-            def getterCode = new AstBuilder().buildFromString("""
+            Statement getterCode = new AstBuilder().buildFromString("""
                 com.ticketbis.groobalize.GroobalizeHelper.
                     getPreferredTranslation(translations, $inherit)?."$fieldName"
-            """).last()
+            """).pop() as Statement
 
             def methodNode = new MethodNode(
                     getterName,
@@ -104,19 +104,19 @@ class TranslatableTransformation implements ASTTransformation {
             classNode.addMethod(methodNode)
 
             // Add getter for a given localeContext
-            getterCode = new AstBuilder().buildFromString("""
+            Statement getterCodeWithContext = new AstBuilder().buildFromString("""
                 com.ticketbis.groobalize.GroobalizeHelper.
                     getPreferredTranslation(translations, $inherit, localeContext)?."$fieldName"
-            """).last()
+            """).pop() as Statement
 
-            def localeContext = new ClassNode(org.springframework.context.i18n.LocaleContext)
+            ClassNode localeContext = new ClassNode(org.springframework.context.i18n.LocaleContext)
             methodNode = new MethodNode(
                     getterName,
                     FieldNode.ACC_PUBLIC,
                     field.type,
                     [new Parameter(localeContext, 'localeContext')] as Parameter[],
                     ClassHelper.EMPTY_TYPE_ARRAY,
-                    getterCode)
+                    getterCodeWithContext)
 
             classNode.addMethod(methodNode)
 
