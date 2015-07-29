@@ -6,23 +6,20 @@ import org.springframework.context.i18n.LocaleContext
 
 @CompileStatic
 class GroobalizeHelper {
-    static Translation getPreferredTranslation(
-            Collection<Translation> translations,
+    static def getField(Collection<Translation> translations,
+            String property,
             boolean inherit = true,
             LocaleContext context = LCH.getLocaleContext()) {
 
-        if (!translations)
+        if (!translations || !context)
             return null
 
         List<Locale> preferredLocales = inherit ?
                 retrivePreferredLocales(context) :
                 (List<Locale>) [context?.locale].findAll()
 
-        if (!preferredLocales)
-            return null
-
         preferredLocales.findResult { locale ->
-            translations.find { it.locale == locale }
+            translations.find { it.locale == locale }?.getProperty(property)
         }
     }
 
@@ -33,7 +30,7 @@ class GroobalizeHelper {
         getLocaleTree(context?.locale)
     }
 
-    static List<Locale> getLocaleTree(Locale locale) {
+    private static List<Locale> getLocaleTree(Locale locale) {
         if (!locale) return []
 
         List<String> elements = (List<String>) [locale.language,

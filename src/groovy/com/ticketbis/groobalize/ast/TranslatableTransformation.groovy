@@ -90,7 +90,7 @@ class TranslatableTransformation implements ASTTransformation {
             // Added getter without parameters
             Statement getterCode = new AstBuilder().buildFromString("""
                 com.ticketbis.groobalize.GroobalizeHelper.
-                    getPreferredTranslation(translations, $inherit)?."$fieldName"
+                    getField(translations, "$fieldName", $inherit)
             """).pop() as Statement
 
             def methodNode = new MethodNode(
@@ -106,7 +106,7 @@ class TranslatableTransformation implements ASTTransformation {
             // Add getter for a given localeContext
             Statement getterCodeWithContext = new AstBuilder().buildFromString("""
                 com.ticketbis.groobalize.GroobalizeHelper.
-                    getPreferredTranslation(translations, $inherit, localeContext)?."$fieldName"
+                    getField(translations, "$fieldName", $inherit, localeContext)
             """).pop() as Statement
 
             ClassNode localeContext = new ClassNode(org.springframework.context.i18n.LocaleContext)
