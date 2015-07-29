@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 ./grailsw refresh-dependencies --non-interactive
 ./grailsw test-app --non-interactive
