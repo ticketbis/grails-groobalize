@@ -1,9 +1,10 @@
 package com.ticketbis.groobalize
 
 import groovy.transform.CompileStatic
+import org.springframework.context.i18n.LocaleContext
 
 @CompileStatic
-class WithFallbackLocaleContext implements org.springframework.context.i18n.LocaleContext {
+class WithFallbackLocaleContext implements LocaleContext {
 
     final List<Locale> preferredLocales
 
