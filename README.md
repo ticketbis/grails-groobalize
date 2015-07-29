@@ -10,7 +10,7 @@ Internacionalization plugin for grails inspired by [Gloobalize](https://github.c
 Add dependency to your BuildConfig;
 
 ```groovy
-compile "com.ticketbis:groobalize:0.1.11"
+compile "com.ticketbis:groobalize:0.1.12"
 ```
 
 ## Usage
@@ -43,23 +43,32 @@ class Book {
 import com.ticketbis.groobalize.Translation
 
 class BookTranslation extends Translation<Book> {
+    @Field(inherit=false)
     String title
+
+    String synopsis = null // Inherit from parent locale
+
+    static constraints = {
+        synopsis(nullable: true)
+    }
 }
 ```
 
 ```groovy
 def book = new Book(author: "Endika", releaseDate: new Date())
 
-book.addToTranslations(title: "english title", locale: new Locale('en'))
+book.addToTranslations(title: "english title", synopsis: "synopsis in english", locale: new Locale('en'))
 book.addToTranslations(title: "american english title", locale: new Locale('en', 'US'))
 book.addToTranslations(title: "british english title", locale: new Locale('en', 'GB'))
 
 book.title // => american english title
+book.synopsis // => synopsis in english
 
 import org.springframework.context.i18n.LocaleContextHolder as LCH
 LCH.locale = new Locale('en', 'AU')
 
-book.title // => english title
+book.title // => null // Title set as no-inheritable field
+book.synopsis // => synopsis in english
 ```
 
 #### Customizing fallbacks
@@ -73,7 +82,8 @@ import com.ticketbis.groobalize.WithFallbackLocaleContext
 LCH.localeContext = new WithFallbackLocaleContext([new Locale('en', 'AU'),
         new Locale('en', 'GB'), new Locale('en')])
 
-book.title // => british english title
+book.title // => null
+book.synopsis // => synopsis in english
 ```
 
 #### Eagerly fetch translations
