@@ -53,6 +53,23 @@ class TranslatableTransformation implements ASTTransformation {
 
     private void addHasManyTranslations(ClassNode classNode, ClassNode translationClass) {
         GroobalizeASTUtils.addHasManyRelationship(classNode, 'translations', translationClass)
+
+        // Add getter for a specific locale
+        def getterName = GrailsClassUtils.getGetterName('translation')
+        Statement getterCode = new AstBuilder().buildFromString("""
+            final loc = locale
+            getTranslations().find { it.locale == loc }
+        """).pop() as Statement
+
+        def methodNode = new MethodNode(
+                getterName,
+                FieldNode.ACC_PUBLIC,
+                translationClass,
+                [new Parameter(new ClassNode(Locale), 'locale')] as Parameter[],
+                ClassHelper.EMPTY_TYPE_ARRAY,
+                getterCode)
+
+        classNode.addMethod(methodNode)
     }
 
     private void addNamedQueries(ClassNode classNode) {

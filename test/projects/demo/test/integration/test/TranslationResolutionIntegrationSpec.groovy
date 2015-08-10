@@ -54,4 +54,11 @@ class TranslationResolutionIntegrationSpec extends IntegrationSpec {
         book.synopsis == "an english synopsis"
     }
 
+    void "test translation getter"() {
+    expect:
+        book.getTranslation(new Locale('es')).title == "titulo en castellano"
+        book.getTranslation(new Locale('en', 'US')).title == "american english title"
+        book.getTranslation(new Locale('de', 'DE')) == null
+    }
+
 }
