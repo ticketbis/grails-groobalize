@@ -15,6 +15,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
 
 import com.ticketbis.groobalize.Translation
+import com.ticketbis.groobalize.GroobalizeHelper
 
 @Log4j
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
@@ -105,10 +106,20 @@ class TranslatableTransformation implements ASTTransformation {
             String getterName = GrailsClassUtils.getGetterName(fieldName)
 
             // Added getter without parameters
-            Statement getterCode = new AstBuilder().buildFromString("""
-                com.ticketbis.groobalize.GroobalizeHelper.
-                    getField(translations, "$fieldName", $inherit)
-            """).pop() as Statement
+            BlockStatement getterCode = new BlockStatement([
+                new ReturnStatement(
+                    new StaticMethodCallExpression(
+                        new ClassNode(GroobalizeHelper),
+                        'getField',
+                        new ArgumentListExpression([
+                            new VariableExpression('translations'),
+                            new ConstantExpression(fieldName),
+                            new ConstantExpression(inherit)
+                        ] as Expression[])
+                    )
+                )
+            ] as Statement[],
+            new VariableScope())
 
             def methodNode = new MethodNode(
                     getterName,
@@ -121,10 +132,22 @@ class TranslatableTransformation implements ASTTransformation {
             classNode.addMethod(methodNode)
 
             // Add getter for a given localeContext
-            Statement getterCodeWithContext = new AstBuilder().buildFromString("""
-                com.ticketbis.groobalize.GroobalizeHelper.
-                    getField(translations, "$fieldName", $inherit, localeContext)
-            """).pop() as Statement
+            BlockStatement getterCodeWithContext = new BlockStatement([
+                new ReturnStatement(
+                    new StaticMethodCallExpression(
+                        new ClassNode(GroobalizeHelper),
+                        'getField',
+                        new ArgumentListExpression([
+                            new VariableExpression('translations'),
+                            new ConstantExpression(fieldName),
+                            new ConstantExpression(inherit),
+                            new VariableExpression('localeContext')
+                        ] as Expression[])
+                    )
+                )
+            ] as Statement[],
+            new VariableScope())
+
 
             ClassNode localeContext = new ClassNode(org.springframework.context.i18n.LocaleContext)
             methodNode = new MethodNode(
