@@ -2,7 +2,7 @@ import grails.orm.HibernateCriteriaBuilder
 import com.ticketbis.groobalize.HibernateCriteriaBuilderExtension
 
 class GroobalizeGrailsPlugin {
-    def version = "0.1.15"
+    def version = "0.1.16"
     // the plugin version
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.4 > *"
