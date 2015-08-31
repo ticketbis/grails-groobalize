@@ -142,5 +142,5 @@ Supported options are:
 
 #### Known issues
 
-Groobalize does not work with Database-migration plugin. See [Issue
-#8](https://github.com/ticketbis/grails-groobalize/issues/8).
+Groobalize does not work with Database-migration plugin. See
+[Issue #8](https://github.com/ticketbis/grails-groobalize/issues/8).
