@@ -7,8 +7,7 @@ import org.springframework.context.i18n.LocaleContext
 @CompileStatic
 class GroobalizeHelper {
 
-    // ToDo Locale.ROOT should be soported
-    static final Locale ROOT_LOCALE = null
+    static final Locale ROOT_LOCALE = Locale.ROOT
 
     static def getField(Collection<Translation> translations,
             String property,
