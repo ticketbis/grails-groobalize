@@ -10,7 +10,7 @@ Internacionalization plugin for grails inspired by [Gloobalize](https://github.c
 Add dependency to your BuildConfig;
 
 ```groovy
-compile "com.ticketbis:groobalize:0.1.15"
+compile "com.ticketbis:groobalize:0.2.0"
 ```
 
 ## Usage
