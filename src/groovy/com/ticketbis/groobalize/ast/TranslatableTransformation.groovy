@@ -47,9 +47,41 @@ class TranslatableTransformation implements ASTTransformation {
 
         log.info "Adding Translatable transform to ${ translatableClassNode.name }..."
 
+        addTranslationClassInfo(translatableClassNode, translateWithClass)
         addHasManyTranslations(translatableClassNode, translateWithClass)
         addNamedQueries(translatableClassNode)
         addProxyGetters(translatableClassNode, translateWithClass)
+    }
+
+    /**
+     * Adds class info and translatable fields as static fields. E.g:.
+     * ```
+     * static final Class translationClass = BookTranslation
+     * static final List translatedFields = ['title', 'description']
+     * ```
+     */
+    private void addTranslationClassInfo(ClassNode classNode, ClassNode translationClass) {
+        // Add translationClass static field
+        GroobalizeASTUtils.getOrCreateStaticField(
+            classNode,
+            'translationClass',
+            new ClassExpression(translationClass),
+            FieldNode.ACC_FINAL,
+            Class)
+
+        // Add translatedFields static field
+        List<FieldNode> translatedFields = getTranslatableFields(translationClass)
+        ArrayExpression initialArrayExpr = new ArrayExpression(
+            new ClassNode(String),
+            translatedFields.collect { new ConstantExpression(it.name) } as List<Expression>)
+
+        GroobalizeASTUtils.getOrCreateStaticField(
+            classNode,
+            'translatedFields',
+            initialArrayExpr,
+            FieldNode.ACC_FINAL,
+            Class)
+
     }
 
     private void addHasManyTranslations(ClassNode classNode, ClassNode translationClass) {
