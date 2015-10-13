@@ -1,6 +1,7 @@
 package com.ticketbis.groobalize.ast
 
 import groovy.util.logging.Log4j
+import groovy.transform.CompilationUnitAware
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.codehaus.groovy.control.CompilePhase
@@ -13,17 +14,24 @@ import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
+import org.codehaus.groovy.control.CompilationUnit
+import org.codehaus.groovy.transform.trait.TraitComposer
 
 import com.ticketbis.groobalize.Translation
+import com.ticketbis.groobalize.Translated
 import com.ticketbis.groobalize.GroobalizeHelper
 
 @Log4j
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class TranslatableTransformation implements ASTTransformation {
+class TranslatableTransformation implements ASTTransformation, CompilationUnitAware {
+
+    CompilationUnit compilationUnit
 
     private final static NON_TRANSLATABLE_FIELDS = [
         'id', 'version', 'errors', 'metaClass', 'lastUpdated', 'dateCreated'
     ]
+
+    private static final ClassNode TRANSLATED_NODE = new ClassNode(Translated)
 
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
         assert astNodes[0] instanceof AnnotationNode
@@ -51,6 +59,7 @@ class TranslatableTransformation implements ASTTransformation {
         addHasManyTranslations(translatableClassNode, translateWithClass)
         addNamedQueries(translatableClassNode)
         addProxyGetters(translatableClassNode, translateWithClass)
+        addTranslatedTrait(translatableClassNode, sourceUnit)
     }
 
     /**
@@ -80,29 +89,11 @@ class TranslatableTransformation implements ASTTransformation {
             'translatedFields',
             initialArrayExpr,
             FieldNode.ACC_FINAL,
-            Class)
-
+            List)
     }
 
     private void addHasManyTranslations(ClassNode classNode, ClassNode translationClass) {
         GroobalizeASTUtils.addHasManyRelationship(classNode, 'translations', translationClass)
-
-        // Add getter for a specific locale
-        def getterName = GrailsClassUtils.getGetterName('translation')
-        Statement getterCode = new AstBuilder().buildFromString("""
-            final loc = locale
-            getTranslations().find { it.locale == loc }
-        """).pop() as Statement
-
-        def methodNode = new MethodNode(
-                getterName,
-                FieldNode.ACC_PUBLIC,
-                translationClass,
-                [new Parameter(new ClassNode(Locale), 'locale')] as Parameter[],
-                ClassHelper.EMPTY_TYPE_ARRAY,
-                getterCode)
-
-        classNode.addMethod(methodNode)
     }
 
     private void addNamedQueries(ClassNode classNode) {
@@ -195,6 +186,17 @@ class TranslatableTransformation implements ASTTransformation {
             // Make it transient
             GroobalizeASTUtils.addTransient(classNode, fieldName)
         }
+    }
+
+    private void addTranslatedTrait(ClassNode classNode, SourceUnit sourceUnit) {
+        if (classNode.declaresInterface(TRANSLATED_NODE))
+            return
+
+        classNode.addInterface(TRANSLATED_NODE)
+        TraitComposer.doExtendTraits(classNode, sourceUnit, compilationUnit)
+
+        GroobalizeASTUtils.addTransient(classNode, 'translationsMapCache')
+        GroobalizeASTUtils.addTransient(classNode, 'translationByLocale')
     }
 
     private List<FieldNode> getTranslatableFields(ClassNode translationClass) {

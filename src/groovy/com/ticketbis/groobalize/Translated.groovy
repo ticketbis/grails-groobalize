@@ -22,7 +22,7 @@ trait Translated {
         getTranslations().find { Translation t -> t.locale == locale }
     }
 
-    transient Map<Locale, Translation> getTranslationByLocale() {
+    Map<Locale, Translation> getTranslationByLocale() {
         if (!translationsMapCache) {
             translationsMapCache = new HashMap(getTranslations().size())
             getTranslations().each { Translation t ->
