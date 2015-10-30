@@ -14,7 +14,7 @@ class GroobalizeGrailsPlugin {
 
     // TODO Fill in these fields
     def title = "Groobalize Plugin" // Headline display name of the plugin
-    def author = "Endika Gutiérrez"
+    def author = "Endika Gutiérrez & Jose Gargallo"
     def authorEmail = ""
     def description = '''\
 Internacionalization plugin for grails inspired by Gloobalize

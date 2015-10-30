@@ -27,7 +27,7 @@ class GroobalizeASTUtils {
             FieldNode field = new FieldNode(
                     fieldName,
                     modifiers,
-                    new ClassNode(Object),
+                    new ClassNode(fieldType),
                     classNode,
                     initialExpression)
 
