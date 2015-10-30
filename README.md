@@ -10,7 +10,7 @@ Internacionalization plugin for grails inspired by [Gloobalize](https://github.c
 Add dependency to your BuildConfig;
 
 ```groovy
-compile "com.ticketbis:groobalize:0.2.0"
+compile "com.ticketbis:groobalize:0.2.1"
 ```
 
 ## Usage
@@ -139,8 +139,3 @@ Supported options are:
   for translations that match exactly with first option of LocaleContext
 * `skipGetter`: when this option is set to true, the proxy getter is not
   added to domain class
-
-#### Known issues
-
-Groobalize does not work with Database-migration plugin. See
-[Issue #8](https://github.com/ticketbis/grails-groobalize/issues/8).
