@@ -2,6 +2,7 @@ package com.ticketbis.groobalize.ast
 
 import groovy.util.logging.Log4j
 import groovy.transform.CompilationUnitAware
+import groovy.transform.CompileStatic
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.codehaus.groovy.control.CompilePhase
@@ -17,34 +18,39 @@ import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.control.CompilationUnit
 import org.codehaus.groovy.transform.trait.TraitComposer
 
-import com.ticketbis.groobalize.Translation
-import com.ticketbis.groobalize.Translated
-import com.ticketbis.groobalize.GroobalizeHelper
+import com.ticketbis.groobalize.*
 
 @Log4j
+@CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class TranslatableTransformation implements ASTTransformation, CompilationUnitAware {
 
     CompilationUnit compilationUnit
 
-    private final static NON_TRANSLATABLE_FIELDS = [
+    private final static String[] NON_TRANSLATABLE_FIELDS = [
         'id', 'version', 'errors', 'metaClass', 'lastUpdated', 'dateCreated'
     ]
 
-    private static final ClassNode TRANSLATED_NODE = new ClassNode(Translated)
+    private static final ClassNode TRANSLATED_NODE =
+            ClassHelper.make(Translated)
+    private static final ClassNode FIELD_ANNOTATION_NODE =
+            ClassHelper.make(Field)
+    private static final ClassNode GROOBALIZE_HELPER_NODE =
+            ClassHelper.make(GroobalizeHelper)
+
 
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
         assert astNodes[0] instanceof AnnotationNode
         assert astNodes[1] instanceof ClassNode,
                 "@Translatable can only be applied on classes"
 
-        AnnotationNode annotation = astNodes[0]
-        ClassNode translatableClassNode = astNodes[1]
+        AnnotationNode annotation =  astNodes[0] as AnnotationNode
+        ClassNode translatableClassNode = astNodes[1] as ClassNode
 
         assert annotation.members['with'] instanceof ClassExpression,
                 "Invalid translation class specified."
 
-        ClassExpression translateWithExpr = annotation.members['with']
+        ClassExpression translateWithExpr = annotation.members['with'] as ClassExpression
         ClassNode translateWithClass = translateWithExpr.type
 
         assert GrailsASTUtils.isDomainClass(translatableClassNode, sourceUnit),
@@ -76,12 +82,12 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
             'translationClass',
             new ClassExpression(translationClass),
             FieldNode.ACC_FINAL,
-            Class)
+            ClassHelper.makeWithoutCaching(Class, false))
 
         // Add translatedFields static field
-        List<FieldNode> translatedFields = getTranslatableFields(translationClass)
+        Collection<FieldNode> translatedFields = getTranslatableFields(translationClass)
         ArrayExpression initialArrayExpr = new ArrayExpression(
-            new ClassNode(String),
+            ClassHelper.STRING_TYPE,
             translatedFields.collect { new ConstantExpression(it.name) } as List<Expression>)
 
         GroobalizeASTUtils.getOrCreateStaticField(
@@ -89,7 +95,7 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
             'translatedFields',
             initialArrayExpr,
             FieldNode.ACC_FINAL,
-            List)
+            ClassHelper.makeWithoutCaching(List, false))
     }
 
     private void addHasManyTranslations(ClassNode classNode, ClassNode translationClass) {
@@ -97,30 +103,35 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
     }
 
     private void addNamedQueries(ClassNode classNode) {
-        Statement code = new AstBuilder().buildFromCode {
+        Statement code = new AstBuilder().buildFromString("""
             includeTranslations { Collection<Locale> locales = null ->
                 withTranslations(locales)
             }
             translated { withDefaultTranslations() }
-        }.pop()
+        """).pop() as Statement
+
         GroobalizeASTUtils.addNamedQuery(classNode, code)
     }
 
     private void addProxyGetters(ClassNode classNode, ClassNode translationClass) {
-        List<FieldNode> translatableFields = getTranslatableFields(translationClass)
+        Collection<FieldNode> translatableFields = getTranslatableFields(translationClass)
         translatableFields.each { FieldNode field ->
             List<AnnotationNode> fieldAnnotations =
-                field.getAnnotations(new ClassNode(Field))
+                field.getAnnotations(FIELD_ANNOTATION_NODE)
 
             boolean inherit = true
             boolean skipGetter = false
 
             if (fieldAnnotations) {
                 AnnotationNode annotation = fieldAnnotations.first()
-                if (annotation.members['inherit'])
-                    inherit = annotation.members['inherit'].isTrueExpression()
-                if (annotation.members['skipGetter'])
-                    skipGetter = annotation.members['skipGetter'].isTrueExpression()
+                if (annotation.members['inherit']
+                        && annotation.members['inherit'] instanceof ConstantExpression) {
+                    inherit = ((ConstantExpression) annotation.members['inherit']).isTrueExpression()
+                }
+                if (annotation.members['skipGetter']
+                        && annotation.members['skipGetter'] instanceof ConstantExpression) {
+                    skipGetter = ((ConstantExpression) annotation.members['skipGetter']).isTrueExpression()
+                }
             }
             if (skipGetter)
                 return
@@ -132,7 +143,7 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
             BlockStatement getterCode = new BlockStatement([
                 new ReturnStatement(
                     new StaticMethodCallExpression(
-                        new ClassNode(GroobalizeHelper),
+                        GROOBALIZE_HELPER_NODE,
                         'getField',
                         new ArgumentListExpression([
                             new VariableExpression('translations'),
@@ -149,7 +160,7 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
                     FieldNode.ACC_PUBLIC,
                     field.type,
                     Parameter.EMPTY_ARRAY,
-                    ClassHelper.EMPTY_TYPE_ARRAY,
+                    [] as ClassNode[],
                     getterCode)
 
             classNode.addMethod(methodNode)
@@ -158,7 +169,7 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
             BlockStatement getterCodeWithContext = new BlockStatement([
                 new ReturnStatement(
                     new StaticMethodCallExpression(
-                        new ClassNode(GroobalizeHelper),
+                        GROOBALIZE_HELPER_NODE,
                         'getField',
                         new ArgumentListExpression([
                             new VariableExpression('translations'),
@@ -172,13 +183,13 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
             new VariableScope())
 
 
-            ClassNode localeContext = new ClassNode(org.springframework.context.i18n.LocaleContext)
+            ClassNode localeContext = ClassHelper.make(org.springframework.context.i18n.LocaleContext)
             methodNode = new MethodNode(
                     getterName,
                     FieldNode.ACC_PUBLIC,
                     field.type,
                     [new Parameter(localeContext, 'localeContext')] as Parameter[],
-                    ClassHelper.EMPTY_TYPE_ARRAY,
+                    [] as ClassNode[],
                     getterCodeWithContext)
 
             classNode.addMethod(methodNode)
@@ -199,7 +210,7 @@ class TranslatableTransformation implements ASTTransformation, CompilationUnitAw
         GroobalizeASTUtils.addTransient(classNode, 'translationByLocale')
     }
 
-    private List<FieldNode> getTranslatableFields(ClassNode translationClass) {
+    private Collection<FieldNode> getTranslatableFields(ClassNode translationClass) {
         translationClass.fields.findAll {
             !(it.modifiers & FieldNode.ACC_STATIC) &&
             !(it.name in NON_TRANSLATABLE_FIELDS)

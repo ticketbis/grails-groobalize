@@ -6,7 +6,6 @@ import groovy.transform.CompileStatic
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
-import org.codehaus.groovy.ast.builder.AstBuilder
 
 import org.codehaus.groovy.grails.commons.GrailsClassUtils
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
@@ -21,13 +20,13 @@ class GroobalizeASTUtils {
             String fieldName,
             Expression initialExpression,
             int modifiers = FieldNode.ACC_PUBLIC,
-            Class fieldType = Object) {
+            ClassNode fieldType = ClassHelper.DYNAMIC_TYPE) {
 
         if (!classNode.getDeclaredField(fieldName)) {
             FieldNode field = new FieldNode(
                     fieldName,
                     modifiers,
-                    new ClassNode(fieldType),
+                    fieldType,
                     classNode,
                     initialExpression)
 
@@ -43,7 +42,7 @@ class GroobalizeASTUtils {
             String fieldName,
             Expression initialExpression,
             int modifiers = FieldNode.ACC_PUBLIC,
-            Class fieldType = Object) {
+            ClassNode fieldType = ClassHelper.DYNAMIC_TYPE) {
 
         getOrCreateField(
                 classNode,
