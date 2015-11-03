@@ -23,16 +23,16 @@ class GroobalizeASTUtils {
             ClassNode fieldType = ClassHelper.DYNAMIC_TYPE) {
 
         if (!classNode.getDeclaredField(fieldName)) {
-            FieldNode field = new FieldNode(
+            PropertyNode property = new PropertyNode(
                     fieldName,
                     modifiers,
                     fieldType,
                     classNode,
-                    initialExpression)
+                    initialExpression,
+                    null, null)
 
-            field.declaringClass = classNode
-            classNode.addField(field)
-            return field
+            classNode.addProperty(property)
+            return property.field
         }
         classNode.getDeclaredField(fieldName)
     }
@@ -74,8 +74,7 @@ class GroobalizeASTUtils {
         FieldNode namedQueriesField = getOrCreateStaticField(
                 classNode,
                 GrailsDomainClassProperty.NAMED_QUERIES,
-                new ClosureExpression(GrailsASTUtils.ZERO_PARAMETERS,
-                                      new BlockStatement()))
+                buildEmptyClosure())
 
         (ClosureExpression) namedQueriesField.initialExpression
     }
@@ -100,6 +99,13 @@ class GroobalizeASTUtils {
         ClosureExpression namedQueriesExpr = getNamedQueriesClosureExpression(classNode)
         BlockStatement blockStmnt = (BlockStatement) namedQueriesExpr.code
         blockStmnt.addStatement(code)
+    }
+
+    static ClosureExpression buildEmptyClosure() {
+        ClosureExpression expr = new ClosureExpression(Parameter.EMPTY_ARRAY,
+                new BlockStatement())
+        expr.variableScope = new VariableScope()
+        return expr
     }
 
 }
