@@ -9,17 +9,9 @@ class Book {
     Book inspiredBy
 
     static constraints = {
-
     }
 
     static hasMany = [
         related: Book
     ]
-
-    static mapping = {
-    }
-
-    static namedQueries = {
-    }
-
 }
