@@ -26,20 +26,6 @@ class TranslationResolutionIntegrationSpec extends IntegrationSpec {
         book.delete()
     }
 
-    void "namedQueries should be work properly"() {
-    given:
-        def book1 = Book.includeTranslations().get(book.id)
-
-        LCH.locale = new Locale('es', 'ES')
-        def book2 = Book.translated().get(book.id)
-    expect:
-        book1.translations.size() > 0
-        book1.getTranslation(Locale.US) != null
-
-        book2.translations.size() > 0
-        book1.getTranslation(new Locale('es', 'ES')) != null
-    }
-
     void "test simple locales fallback"() {
     given:
         LCH.locale = new Locale('es', 'ES')
