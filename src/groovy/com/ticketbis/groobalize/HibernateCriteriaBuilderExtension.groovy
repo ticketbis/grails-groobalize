@@ -1,7 +1,7 @@
 package com.ticketbis.groobalize
 
 import groovy.transform.CompileStatic
-import grails.orm.HibernateCriteriaBuilder as CriteriaBuilder
+import grails.orm.HibernateCriteriaBuilder
 import org.hibernate.Criteria
 import org.hibernate.criterion.Restrictions
 import static org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN
@@ -9,7 +9,7 @@ import static org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN
 @CompileStatic
 final class HibernateCriteriaBuilderExtension {
     static void fetchTranslations(
-            CriteriaBuilder builder,
+            HibernateCriteriaBuilder builder,
             String path = null,
             String alias = null,
             Collection<Locale> locales = null) {
@@ -22,23 +22,21 @@ final class HibernateCriteriaBuilderExtension {
         if (path) {
             builder.createAlias(path, path.replace('.', '_'), LEFT_JOIN)
         }
-        if (locales) {
-            builder.instance.createAlias(translationsPath, alias, LEFT_JOIN,
-                    Restrictions.in(alias + '.locale', locales))
 
-            // We need to set locale filter also in where clause to avoid lazy
-            // translations reload
-            builder.or {
-                builder.isNull(alias + '.id')
-                builder.in(alias + '.locale', locales)
-            }
-        } else {
-            builder.instance.createAlias(translationsPath, alias, LEFT_JOIN)
+        builder.instance.createAlias(translationsPath, alias, LEFT_JOIN)
+
+        if (locales) {
+            builder.instance.add(
+                Restrictions.or(
+                    Restrictions.in(alias + '.locale', locales),
+                    Restrictions.isNull(alias + '.id')
+                )
+            )
         }
     }
 
     static void withTranslations(
-            CriteriaBuilder builder,
+            HibernateCriteriaBuilder builder,
             String path,
             Collection<Locale> locales = null) {
 
@@ -46,14 +44,14 @@ final class HibernateCriteriaBuilderExtension {
     }
 
     static void withTranslations(
-            CriteriaBuilder builder,
+            HibernateCriteriaBuilder builder,
             Collection<Locale> locales = null) {
 
         fetchTranslations(builder, null, null, locales)
     }
 
     static void withDefaultTranslations(
-            CriteriaBuilder builder,
+            HibernateCriteriaBuilder builder,
             String path = null) {
 
         Collection<Locale> locales =
