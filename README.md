@@ -10,7 +10,7 @@ Internacionalization plugin for grails inspired by [Gloobalize](https://github.c
 Add dependency to your BuildConfig;
 
 ```groovy
-compile "com.ticketbis:groobalize:0.2.1"
+compile "com.ticketbis:groobalize:0.2.2"
 ```
 
 ## Usage
@@ -70,6 +70,32 @@ LCH.locale = new Locale('en', 'AU')
 book.title // => null // Title set as no-inheritable field
 book.synopsis // => synopsis in english
 ```
+
+#### Accessing properties
+
+There are some custom proxy getters for properties in translatable
+classes.
+
+```groovy
+book.title  // or book.getTitle() => Gets field for the current locale
+            // context (LocaleContextHolder).
+
+book.getTitle(localeContext) // Retrives property for the given locale context.
+
+book.getTitle { locale } // Builds a LocaleContext based on the given closure.
+```
+
+#### Accessing translation objects
+
+Translation acts like a regular domain class in Grails that is belonged
+to the translatable class.
+
+```groovy
+book.getTranslations() // => returns queried translations
+
+book.getTranslation(Locale.US) // => returns US translation if exists
+```
+
 
 #### Customizing fallbacks
 
