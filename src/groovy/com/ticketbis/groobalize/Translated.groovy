@@ -19,11 +19,11 @@ trait Translated {
         if (translationsMapCache)
             return translationsMapCache[locale]
 
-        getTranslations().find { Translation t -> t.locale == locale }
+        getTranslations()?.find { Translation t -> t.locale == locale }
     }
 
     Map<Locale, Translation> getTranslationByLocale() {
-        if (!translationsMapCache) {
+        if (!translationsMapCache && getTranslations()) {
             translationsMapCache = new HashMap(getTranslations().size())
             getTranslations().each { Translation t ->
                 translationsMapCache[t.locale] = t
