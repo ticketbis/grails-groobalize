@@ -1,9 +1,9 @@
 package test
 
-import demo.*
-import org.springframework.context.i18n.LocaleContextHolder as LCH
 import com.ticketbis.groobalize.WithFallbackLocaleContext
+import demo.*
 import grails.test.spock.IntegrationSpec
+import org.springframework.context.i18n.LocaleContextHolder as LCH
 
 class TranslationResolutionIntegrationSpec extends IntegrationSpec {
 
@@ -59,6 +59,14 @@ class TranslationResolutionIntegrationSpec extends IntegrationSpec {
         book.getTranslation(new Locale('es')).title == "titulo en castellano"
         book.getTranslation(new Locale('en', 'US')).title == "american english title"
         book.getTranslation(new Locale('de', 'DE')) == null
+    }
+
+    void "test that getTranslation() works properly for an entity with no translations"() {
+    setup:
+        Book newBook = new Book(author: "Dummy author", releaseDate: new Date())
+
+    expect:
+        newBook.getTranslation(new Locale('es')) == null
     }
 
 }

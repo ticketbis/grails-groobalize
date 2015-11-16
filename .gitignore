@@ -36,3 +36,5 @@
 *.swp
 *.swo
 *.zip.sha1
+/.idea/
+*.iml

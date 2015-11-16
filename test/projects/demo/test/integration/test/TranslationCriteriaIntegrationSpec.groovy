@@ -1,10 +1,8 @@
 package test
 
 import demo.*
-import org.springframework.context.i18n.LocaleContextHolder as LCH
-import com.ticketbis.groobalize.WithFallbackLocaleContext
 import grails.test.spock.IntegrationSpec
-import org.springframework.web.context.request.RequestContextHolder as RCH
+import org.springframework.context.i18n.LocaleContextHolder as LCH
 
 class TranslationCriteriaIntegrationSpec extends IntegrationSpec {
 
@@ -46,8 +44,7 @@ class TranslationCriteriaIntegrationSpec extends IntegrationSpec {
         }
     expect:
         Locale.US in book1.translations*.locale
-        // TODO: This test is failing
-        //book2 != null
+        book2 != null
     }
 
     void "namedQueries should be work properly"() {
