@@ -38,3 +38,6 @@
 *.zip.sha1
 /.idea/
 *.iml
+
+.gradle
+build
